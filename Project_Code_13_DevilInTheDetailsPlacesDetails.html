@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+   	  <link rel="stylesheet" href="static/basic.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="options-box">
+        <h1>Maadi ya dawla</h1>
+        <div>
+          <span class="text">Search for nearby places</span>
+          <input id="places-search" type="text" placeholder="Ex: Pizza Hut in Maadi">
+          <input id="go-places" type="button" value="Go">
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+    
+	<script src="js/script.js"></script>
+    <script async defer
+        src=
+        "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyCXLXozEI1LijbBuur4h0F1ahdweCVY_9c&v=3&callback=initMap">
+    </script>
+
+  </body>
+</html>
