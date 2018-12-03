@@ -1,112 +1,137 @@
-  var map;
-  // Create a new blank array for all the listing markers.
-  var markers = [];
-  // This global polygon variable is to ensure only ONE polygon is rendered.
-  var polygon = null;
-  // Create placemarkers array to use in multiple functions to have control
-  // over the number of places that show.
-  var placeMarkers = [];
+/*global document, window, alert, console, require, google, lightDreamStyle, locations, Place, ko*/
+// the above line used for the remedy for jslint errors "‘someVariable’ was used before it was defined"
+var map;
+var markers = []; // Create a new blank array for all the listing markers.
 
-  
-  function initMap() {
-	// Constructor creates a new map - only center and zoom are required.
-	map = new google.maps.Map(document.getElementById('map'), {
-	  center: {lat: 27.994805, lng: -82.7344864},
-	  zoom: 18,
-	  mapTypeControl: false
-	});
-	
-	
-	var largeInfowindow = new google.maps.InfoWindow();
+function initMap() {
+    // Constructor creates a new map - only center and zoom are required.
+    'use strict';
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 29.9592427, lng: 31.2573508},
+        zoom: 16,
+        mapTypeControl: false
+    });
 
-	
-	   // The following group uses the location array to create an array of markers on initialize.
-	for (var i = 0; i < locations.length; i++) {
-	  // Get the position from the location array.
-	  var position = locations[i].location;
-	  var title = locations[i].title;
-	  // Create a marker per location, and put into markers array.
-	  var marker = new google.maps.Marker({
-		position: position,
-		title: title,
-		animation: google.maps.Animation.DROP,
-		id: i
-	  });
-	  // Push the marker to our array of markers.
-	  markers.push(marker);
-	  // Create an onclick event to open an infowindow at each marker.
-	  marker.addListener('click', function() {
-		populateInfoWindow(this, largeInfowindow);
-	  });
-	  
-	}
-	showListings()
-  }
-	  
-	  
-  // This function populates the infowindow when the marker is clicked. We'll only allow
-  // one infowindow which will open at the marker that is clicked, and populate based
-  // on that markers position.
-  function populateInfoWindow(marker, infowindow) {
-	// Check to make sure the infowindow is not already opened on this marker.
-	if (infowindow.marker != marker) {
-	  infowindow.marker = marker;
-	  infowindow.setContent('<div>' + marker.title + '</div>');
-	  infowindow.open(map, marker);
-	  // Make sure the marker property is cleared if the infowindow is closed.
-	  infowindow.addListener('closeclick',function(){
-		infowindow.setMarker = null;
-	  });
-	}
-  	var streetViewService = new google.maps.StreetViewService();
-	var radius = 50;
+    map.setOptions({styles: lightDreamStyle}); // use map style
 
-  // In case the status is OK, which means the pano was found, compute the
-  // position of the streetview image, then calculate the heading, then get a
-  // panorama from that and set the options
-  function getStreetView(data, status) {
-	if (status == google.maps.StreetViewStatus.OK) {
-	  var nearStreetViewLocation = data.location.latLng;
-	  var heading = google.maps.geometry.spherical.computeHeading(
-		nearStreetViewLocation, marker.position);
-		infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
-		var panoramaOptions = {
-		  position: nearStreetViewLocation,
-		  pov: {
-			heading: heading,
-			pitch: 30
-		  }
-		};
-	  var panorama = new google.maps.StreetViewPanorama(
-		document.getElementById('pano'), panoramaOptions);
-	} else {
-	  infowindow.setContent('<div>' + marker.title + '</div>' +
-		'<div>No Street View Found</div>');
-	}
-  }
-  // Use streetview service to get the closest streetview image within
-  // 50 meters of the markers position
-  streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-  // Open the infowindow on the correct marker.
-  infowindow.open(map, marker);
-  }
-  
-	// This function will loop through the markers array and display them all.
-  function showListings() {
-	var bounds = new google.maps.LatLngBounds();
-	// Extend the boundaries of the map for each marker and display the marker
-	for (var i = 0; i < markers.length; i++) {
-	  markers[i].setMap(map);
-	  bounds.extend(markers[i].position);
-	}
-	map.fitBounds(bounds);
-  }
 
-	
-  // This function will loop through the listings and hide them all.
-  function hideListings() {
-	for (var i = 0; i < markers.length; i++) {
-	  markers[i].setMap(null);
-	}
-  }
- 
+    // add markers from data file
+    var i;
+    for (i = 0; i < locations.length; i += 1) {
+        markers.push(new Place(locations[i]));
+    }
+}
+
+// This is the PLACE DETAILS search - it's the most detailed so it's only
+// executed when a marker is selected, indicating the user wants more
+// details about that place.
+function getPlacesDetails(marker, infowindow) {
+    'use strict';
+    var service = new google.maps.places.PlacesService(map);
+    service.getDetails({
+        placeId: marker.id
+    }, function (place, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            // Set the marker property on this infowindow so it isn't created again.
+            infowindow.marker = marker;
+            var innerHTML = '<div>';
+            if (place.name) {
+                innerHTML += '<strong>' + place.name + '</strong>';
+            }
+            if (place.formatted_address) {
+                innerHTML += '<br>' + place.formatted_address;
+            }
+            if (place.formatted_phone_number) {
+                innerHTML += '<br>' + place.formatted_phone_number;
+            }
+            if (place.opening_hours) {
+                innerHTML += '<br><br><strong>Hours:</strong><br>' +
+                    place.opening_hours.weekday_text[0] + '<br>' +
+                    place.opening_hours.weekday_text[1] + '<br>' +
+                    place.opening_hours.weekday_text[2] + '<br>' +
+                    place.opening_hours.weekday_text[3] + '<br>' +
+                    place.opening_hours.weekday_text[4] + '<br>' +
+                    place.opening_hours.weekday_text[5] + '<br>' +
+                    place.opening_hours.weekday_text[6];
+            }
+            if (place.photos) {
+                innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
+                    {maxHeight: 100, maxWidth: 200}
+                ) + '">';
+            }
+            innerHTML += '</div>';
+            infowindow.setContent(innerHTML);
+            infowindow.open(map, marker);
+            // Make sure the marker property is cleared if the infowindow is closed.
+            infowindow.addListener('closeclick', function () {
+                infowindow.marker = null;
+            });
+        }
+    });
+}
+
+// ViewModel function
+function ViewModel() {
+    'use strict';
+    // initialize the Map
+    initMap();
+    // connect search input and list all locations using Knockout
+    this.searchInput = ko.observable("");
+    var self = this;
+    this.locations = ko.computed(function () {
+        var result = [];
+        markers.forEach(function (marker) {
+            if (marker.title.toLowerCase().includes(self.searchInput().toLowerCase())) {
+                result.push(marker);
+                marker.setVisible(true);
+            } else {
+                marker.setVisible(false);
+            }
+        });
+        return result;
+    }, this);
+}
+
+// Initialize the application
+function initApp() {
+    'use strict';
+    ko.applyBindings(new ViewModel());
+}
+
+// create a Place
+var Place = function (place) {
+    'use strict';
+    this.title = place.title;
+    this.type = place.type;
+    var point = new google.maps.LatLng(place.lat, place.lng),
+        marker = new google.maps.Marker({
+            position: point,
+            title: place.title,
+            map: map,
+            id: place.place_id
+        }),
+
+    // Create a single infowindow to be used with the place details information
+    // so that only one is open at once.
+        placeInfoWindow = new google.maps.InfoWindow();
+
+    // If a marker is clicked, do a place details search on it in the next function.
+    marker.addListener('click', function () {
+        if (placeInfoWindow.marker === this) {
+            console.log("This infowindow already is on this marker!");
+        } else {
+            getPlacesDetails(this, placeInfoWindow);
+        }
+    });
+
+    this.marker = marker;
+    this.setVisible = function (visibile) {
+        this.marker.setVisible(visibile);
+    };
+
+    //this.marker.addListener('click', createInfowindow);
+    // trigger click event to show info window
+    this.showInfo = function () {
+        google.maps.event.trigger(this.marker, 'click');
+    };
+};

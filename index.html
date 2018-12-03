@@ -1,20 +1,42 @@
 <!DOCTYPE html>
-<html>
-  <head>
-   	  <link rel="stylesheet" href="static/basic.css" />
-  </head>
-  <body>
-	<div></div>
-    <div id="map"></div>
+<html lang="en">
+    <head>
+	    <title>Maadi Neighborhood</title>
+		<meta charset="utf-8"/>
+        <!-- CSS link -->
+        <link rel="stylesheet" href="static/basic.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="options-box">
+                <h1>Maadi Neighborhood</h1>
+                <div>
+                    <span class="text">Filter the below places</span>
+                </div>
+                <div>
+                    <input class="form-control" type="text" data-bind="textInput: searchInput, valueUpdate: 'afterkeydown'" placeholder="Search">
+                </div>
+                <ul class="nav flex-column" data-bind="foreach: locations">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-bind="text: title, click: showInfo"></a>
+                    </li>
+                </ul>
+            </div>
+            <div id="map"></div>
+        </div>
 
-    
-	<script src="js/app.js"></script>
-	<script src="js/data.js"></script>
-	<script type='text/javascript' src='js/knockout-3.4.2.js'></script>
-    <script async defer
-        src=
-        "https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyCXLXozEI1LijbBuur4h0F1ahdweCVY_9c&libraries=geometry&v=3&&callback=initMap">
-    </script>
+        <!-- include JavaScript files and libraries -->
+        <script type="text/javascript" src="js/data.js"></script>
+        <script type="text/javascript" src="js/map_style.js"></script>
+        <script type="text/javascript" src="js/app.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js'></script>    
 
-  </body>
+        <!-- Call google Map API -->    
+        <script async defer
+            src=
+            "https://maps.googleapis.com/maps/api/js?libraries=places,geometry&key=AIzaSyCXLXozEI1LijbBuur4h0F1ahdweCVY_9c&v=3&&callback=initApp">
+        </script>
+
+    </body>
 </html>
